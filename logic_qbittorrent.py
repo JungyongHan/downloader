@@ -98,7 +98,7 @@ class LogicQbittorrent(object):
             if path is not None and path.strip() == '':
                 path = None
             if ModelSetting.get_bool('qbittorrnet_normal_file_download') and url.startswith('http'):
-                th = threading.Thread(target=LogicQbittorrent.download_thread_function, args=(url,))
+                th = threading.Thread(target=LogicQbittorrent.download_thread_function, args=(url,path,))
                 th.start()
                 ret['ret'] = 'success2'
 
@@ -142,18 +142,27 @@ class LogicQbittorrent(object):
         return fname[0].replace('"', '')
 
     @staticmethod
-    def download_thread_function(url):
+    def download_thread_function(url, path):
         try:
             logger.debug('thread url:' + url)
             download_path = ModelSetting.get('qbittorrnet_normal_file_download_path')
-            r = requests.get(url, allow_redirects=True)
-            filename = LogicQbittorrent.get_filename_from_cd(r.headers.get('content-disposition'))
-            if not os.path.exists(download_path):
-                os.makedirs(download_path)
-            filepath = os.path.join(download_path, filename)
-            logger.debug('Direct download : %s', filepath)
-            open(filepath, 'wb').write(r.content)
-            data = {'type':'success', 'msg' : u'다운로드 성공<br>' + filepath}
+            try:
+                r = requests.get(url, allow_redirects=True)
+                filename = LogicQbittorrent.get_filename_from_cd(r.headers.get('content-disposition'))
+                if not os.path.exists(download_path):
+                    os.makedirs(download_path)
+                filepath = os.path.join(download_path, filename)
+                logger.debug('Direct download : %s', filepath)
+                open(filepath, 'wb').write(r.content)
+                data = {'type':'success', 'msg' : u'다운로드 성공<br>' + filepath}
+            except:
+                r = requests.get(url, allow_redirects=False)
+                if(str(r.text).find('magnet:?xt=urn:') == -1):
+                    raise Exception
+                r = str(r.text).replace("Moved Permanently. Redirecting to ","")
+                tmp = LogicQbittorrent.program.download_from_link(r, savepath=path)
+                data = {'type':'success', 'msg' : u'다운로드 성공<br>' + path}
+                
         except Exception as e: 
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
