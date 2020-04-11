@@ -90,6 +90,7 @@ class LogicQbittorrent(object):
     @staticmethod
     def add_download(url, path):
         try:
+            logger.debug('start url:' + url)
             logger.debug(path)
             logger.debug([path])
             path = path.encode('utf8')
@@ -143,6 +144,7 @@ class LogicQbittorrent(object):
     @staticmethod
     def download_thread_function(url):
         try:
+            logger.debug('thread url:' + url)
             download_path = ModelSetting.get('qbittorrnet_normal_file_download_path')
             r = requests.get(url, allow_redirects=True)
             filename = LogicQbittorrent.get_filename_from_cd(r.headers.get('content-disposition'))
