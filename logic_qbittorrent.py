@@ -97,14 +97,13 @@ class LogicQbittorrent(object):
             ret = {}
             if path is not None and path.strip() == '':
                 path = None
+            if LogicQbittorrent.program is None:
+                LogicQbittorrent.program_init()
             if ModelSetting.get_bool('qbittorrnet_normal_file_download') and url.startswith('http'):
                 th = threading.Thread(target=LogicQbittorrent.download_thread_function, args=(url,path,))
                 th.start()
                 ret['ret'] = 'success2'
-
             else:
-                if LogicQbittorrent.program is None:
-                    LogicQbittorrent.program_init()
                 if LogicQbittorrent.program is None:
                     ret['ret'] = 'error'
                     ret['error'] = '큐빗토렌트 접속 실패'
